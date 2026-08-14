@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(AdaptiveGate VERSION 0.1.4)
+project(AdaptiveGate VERSION 0.1.9)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -34,6 +34,10 @@ juce_add_plugin(AdaptiveGate
 target_sources(AdaptiveGate PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
+    Source/GateVisualizerComponent.cpp
+    Source/PresetManager.cpp
+    Source/PresetPanelComponent.cpp
+    Source/ControlPanelComponent.cpp
     Source/DSP/FilterBank.cpp
     Source/DSP/EnvelopeFollower.cpp
     Source/DSP/NoiseFloorTracker.cpp

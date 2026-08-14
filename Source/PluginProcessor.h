@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "DSP/AdaptiveGateEngine.h"
+#include "PresetManager.h"
 
 class AdaptiveGateAudioProcessor : public juce::AudioProcessor
 {
@@ -39,6 +40,11 @@ public:
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
+    /** For the editor's visualizer: thread-safe, callable from the message thread. */
+    std::vector<adaptivegate::dsp::AdaptiveGateEngine::BandMeter> getMeterSnapshot() const { return engine.getMeterSnapshot(); }
+
+    adaptivegate::PresetManager& getPresetManager() { return presetManager; }
+
     juce::AudioProcessorValueTreeState apvts;
 
     // Parameter IDs (shared with the editor)
@@ -57,6 +63,7 @@ private:
     void updateEngineParameters();
 
     adaptivegate::dsp::AdaptiveGateEngine engine;
+    adaptivegate::PresetManager presetManager;
     int lastSourceTypeIndex = -1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AdaptiveGateAudioProcessor)

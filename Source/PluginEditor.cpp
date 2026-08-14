@@ -1,11 +1,13 @@
 #include "PluginEditor.h"
 
 AdaptiveGateAudioProcessorEditor::AdaptiveGateAudioProcessorEditor (AdaptiveGateAudioProcessor& p)
-    : AudioProcessorEditor (&p), processorRef (p), genericEditor (p)
+    : AudioProcessorEditor (&p), processorRef (p), visualizer (p), presetPanel (p), controlPanel (p)
 {
-    addAndMakeVisible (genericEditor);
+    addAndMakeVisible (visualizer);
+    addAndMakeVisible (presetPanel);
+    addAndMakeVisible (controlPanel);
     setResizable (true, true);
-    setSize (480, 480);
+    setSize (520, 700);
 }
 
 void AdaptiveGateAudioProcessorEditor::paint (juce::Graphics& g)
@@ -15,5 +17,8 @@ void AdaptiveGateAudioProcessorEditor::paint (juce::Graphics& g)
 
 void AdaptiveGateAudioProcessorEditor::resized()
 {
-    genericEditor.setBounds (getLocalBounds());
+    auto area = getLocalBounds();
+    visualizer.setBounds (area.removeFromTop (220));
+    presetPanel.setBounds (area.removeFromTop (34));
+    controlPanel.setBounds (area);
 }
