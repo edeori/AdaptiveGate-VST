@@ -94,7 +94,7 @@ PedalViewComponent::PedalViewComponent (AdaptiveGateAudioProcessor& p)
     const KnobSpec specs[] = {
         { &thresholdKnob, AdaptiveGateAudioProcessor::thresholdParamId, "THRESHOLD", "How strict the gate is - higher closes on more of the signal." },
         { &sensitivityKnob, AdaptiveGateAudioProcessor::sensitivityParamId, "SENSITIVITY", "How sharply the gate snaps open/closed around the threshold." },
-        { &mixKnob, AdaptiveGateAudioProcessor::mixParamId, "MIX", "Blends the dry and gated signal." },
+        { &attackKnob, AdaptiveGateAudioProcessor::attackParamId, "ATTACK", "How quickly the gate opens once signal appears." },
     };
 
     for (const auto& spec : specs)
@@ -163,7 +163,7 @@ void PedalViewComponent::resized()
     // Same idiom as MothBiteAudioProcessorEditor::resized(): a label directly above a rotary
     // slider whose own bounds already include its below-mounted text box, placed straight over
     // the pedal artwork - no extra backing panel. Triangle formation (Threshold apex, Sensitivity
-    // + Mix at the base) aligned with the artwork's own engraved triangle/circle motif, sitting
+    // + Attack at the base) aligned with the artwork's own engraved triangle/circle motif, sitting
     // in the middle of the composition rather than crowded down at the bottom edge.
     constexpr float knobWidth = 218.0f;
     constexpr float knobHeight = 258.0f;
@@ -173,10 +173,10 @@ void PedalViewComponent::resized()
     const Placement placements[3] = {
         { 512.0f, 792.0f },  // THRESHOLD - apex
         { 300.0f, 1084.0f }, // SENSITIVITY - base left
-        { 724.0f, 1084.0f }, // MIX - base right
+        { 724.0f, 1084.0f }, // ATTACK - base right
     };
 
-    Knob* knobs[3] = { &thresholdKnob, &sensitivityKnob, &mixKnob };
+    Knob* knobs[3] = { &thresholdKnob, &sensitivityKnob, &attackKnob };
     for (int i = 0; i < 3; ++i)
     {
         const auto& p = placements[i];

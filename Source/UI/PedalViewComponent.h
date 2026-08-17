@@ -8,11 +8,13 @@
 
 /**
     Simplified "stompbox" view: the gate-pedal.png artwork as a background, with only the three
-    controls a player needs live (Threshold, Sensitivity, Mix) exposed as knobs bound directly to
-    the same apvts parameters the full Advanced view uses - no separate/derived parameters. Source
-    is pinned to "Guitar" whenever this view is visible (there's no Source control here, and the
-    pedal skin is explicitly a guitar-pedal aesthetic); Range/Attack/Hysteresis stay untouched at
-    whatever value they currently hold.
+    controls a player needs live (Threshold, Sensitivity, Attack) exposed as knobs bound directly to
+    the same apvts parameters the full Advanced view uses - no separate/derived parameters. Attack
+    (not Mix) is the third knob: on a gate, how fast it opens is a core part of the sound, while
+    dry/wet blending is a secondary, set-and-forget control better suited to the Advanced view.
+    Source is pinned to "Guitar" whenever this view is visible (there's no Source control here, and
+    the pedal skin is explicitly a guitar-pedal aesthetic); Range/Hold/Release/Hysteresis/Mix stay
+    untouched at whatever value they currently hold.
 */
 class PedalViewComponent final : public juce::Component
 {
@@ -41,7 +43,7 @@ private:
         std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attachment;
     };
 
-    Knob thresholdKnob, sensitivityKnob, mixKnob;
+    Knob thresholdKnob, sensitivityKnob, attackKnob;
 
     juce::TextButton advancedButton { "ADV" };
 
