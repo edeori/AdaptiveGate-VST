@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(AdaptiveGate VERSION 0.1.9)
+project(AdaptiveGate VERSION 0.1.10)
+
+option(ADAPTIVEGATE_LAYOUT_TUNER "Enable the debug-only JUCE layout tuner" OFF)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,6 +17,22 @@ FetchContent_Declare(
     GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(JUCE)
+
+juce_add_binary_data(AdaptiveGateAssets SOURCES
+    Assets/background.png
+    Assets/moth_logo.png
+    Assets/SplitFire-knob.png
+    Assets/SplitFire-rect-off.png
+    Assets/SplitFire-rect-on.png
+    Assets/StringLife-slider_thumb.png
+    Assets/gate-pedal.png
+    Assets/knob_modern.svg
+    Assets/knob_modern_pointer.svg
+    Assets/Fonts/Oxanium-Bold.ttf
+    Assets/Fonts/BarlowCondensed-Light.ttf
+    Assets/Fonts/BarlowCondensed-Medium.ttf
+    Assets/Fonts/Rajdhani-Medium.ttf
+)
 
 juce_add_plugin(AdaptiveGate
     COMPANY_NAME "Moth Production"
@@ -38,6 +56,9 @@ target_sources(AdaptiveGate PRIVATE
     Source/PresetManager.cpp
     Source/PresetPanelComponent.cpp
     Source/ControlPanelComponent.cpp
+    Source/UI/AdaptiveGateFonts.cpp
+    Source/UI/AdaptiveGateLookAndFeel.cpp
+    Source/UI/PedalViewComponent.cpp
     Source/DSP/FilterBank.cpp
     Source/DSP/EnvelopeFollower.cpp
     Source/DSP/NoiseFloorTracker.cpp
@@ -61,10 +82,15 @@ target_compile_definitions(AdaptiveGate
         JUCE_DISPLAY_SPLASH_SCREEN=0
 )
 
+if(ADAPTIVEGATE_LAYOUT_TUNER)
+    target_compile_definitions(AdaptiveGate PRIVATE JUCE_LAYOUT_TUNER=1)
+endif()
+
 target_link_libraries(AdaptiveGate
     PRIVATE
         juce::juce_audio_utils
         juce::juce_dsp
+        AdaptiveGateAssets
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

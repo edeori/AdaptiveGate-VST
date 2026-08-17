@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adaptive Gate — interactive UI concept</title>
+  <link rel="stylesheet" href="../../MothProduction-Shared-VST/UI/Mockup/moth-ui.css">
+  <style>
+    :root {
+      --accent: #42d9ff;
+      --accent-hot: #96edff;
+      --accent-rgb: 66, 217, 255;
+      --violet: #944cff;
+      --violet-hot: #c190ff;
+      --threshold: #ffb521;
+      --gate-open: .72;
+    }
+    * { box-sizing: border-box; }
+    body.moth-preview {
+      min-width: 1160px;
+      background: radial-gradient(circle at 48% 40%, rgba(65,32,96,.22), transparent 43%), #030407;
+    }
+    body.moth-preview.shop-render { min-width: 1100px; min-height: 720px; padding: 0; overflow: hidden; background: #030407; }
+    body.shop-render .plugin { box-shadow: none; }
+    body.shop-render .tips { display: none; }
+    .plugin {
+      --moth-background: url("assets/adaptive-gate-panel.png");
+      width: 1100px;
+      height: 720px;
+      aspect-ratio: auto;
+      border-radius: 20px;
+    }
+    .moth-header { height: 78px; padding: 0; }
+    .moth-maker { position: absolute; left: 42px; top: 29px; letter-spacing: .18em; }
+    .moth-logo { position: absolute; left: 527px; top: 21px; width: 46px; height: 30px; }
+    .header-actions { position: absolute; inset: 0; }
+    .preset-bar { position: absolute; left: 650px; top: 23px; display: flex; gap: 4px; height: 30px; }
+    .preset-nav { width: 26px; min-width: 26px; padding: 0; }
+    .preset-select { width: 160px; min-width: 160px; height: 30px; }
+    .preset-save { width: 54px; padding: 0; }
+    .moth-version { position: absolute; right: 122px; top: 31px; }
+    .moth-bypass { position: absolute; right: 35px; top: 23px; height: 30px; padding: 0 12px; }
+    .moth-content { position: absolute; inset: 0; z-index: 2; height: auto; padding: 0; }
+    .visualizer { position: absolute; left: 25px; top: 84px; width: 778px; height: 450px; overflow: hidden; border: 1px solid rgba(187,201,222,.09); border-radius: 8px; box-shadow: inset 0 0 20px rgba(0,0,0,.28); }
+    .identity { position: absolute; z-index: 5; top: 23px; left: 0; width: 100%; text-align: center; pointer-events: none; }
+    .identity h1 { margin: 0; font: 700 31px/1 Oxanium, sans-serif; letter-spacing: .075em; text-transform: uppercase; background: linear-gradient(96deg,#e7faff 7%,#d8c6ff 53%,#b56bff 95%); -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 0 11px rgba(148,76,255,.24)); }
+    .identity p { margin: 7px 0 0; color: #7c8491; font: 500 10px Rajdhani, sans-serif; letter-spacing: .38em; text-transform: uppercase; }
+    .demo-toggle { position: absolute; z-index: 8; left: 20px; top: 21px; display: flex; align-items: center; gap: 8px; color: #858d99; font: 500 9px Rajdhani, sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+    .demo-toggle .moth-toggle { width: 34px; height: 18px; }
+    .demo-toggle .moth-toggle::after { left: 2px; top: 2px; width: 12px; height: 12px; }
+    .demo-toggle .moth-toggle[aria-pressed="true"]::after { translate: 16px 0; }
+    #spectrum { position: absolute; left: 22px; top: 93px; width: 734px; height: 295px; }
+    .gate-readout { position: absolute; z-index: 7; left: 50%; top: 230px; translate: -50% -50%; min-width: 86px; padding: 8px 6px 7px; text-align: center; background: rgba(3,5,8,.84); border: 1px solid rgba(187,201,222,.21); border-radius: 5px; box-shadow: 0 6px 16px #000; }
+    .gate-readout strong { display: block; color: #f0f4fa; font: 500 25px/1 Rajdhani, sans-serif; }
+    .gate-readout span { display: block; margin-top: 3px; color: var(--accent-hot); font: 500 8px Rajdhani, sans-serif; letter-spacing: .18em; text-transform: uppercase; }
+    .legend { position: absolute; z-index: 7; right: 20px; top: 22px; display: flex; gap: 14px; color: #727b88; font: 500 8px Rajdhani, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+    .legend span::before { content: ""; display: inline-block; width: 9px; height: 2px; margin-right: 5px; vertical-align: middle; background: var(--swatch); box-shadow: 0 0 5px var(--swatch); }
+    .band-labels { position: absolute; left: 23px; right: 23px; bottom: 33px; display: grid; grid-template-columns: repeat(8,1fr); color: #747d89; font: 500 8px Rajdhani, sans-serif; letter-spacing: .05em; text-align: center; }
+    .driver-readout { position: absolute; left: 23px; bottom: 12px; color: #747d89; font: 500 9px Rajdhani, sans-serif; letter-spacing: .13em; text-transform: uppercase; }
+    .driver-readout strong { color: var(--accent-hot); font-weight: 500; }
+    .primary-strip { position: absolute; left: 25px; top: 547px; width: 778px; height: 102px; display: grid; grid-template-columns: minmax(0,1fr) 118px 118px; align-items: center; padding: 8px 24px 7px; gap: 16px; border: 1px solid rgba(187,201,222,.09); border-radius: 8px; box-shadow: inset 0 0 20px rgba(0,0,0,.28); }
+    .threshold-control { align-self: stretch; padding-top: 6px; }
+    .strip-head { display: flex; align-items: baseline; justify-content: space-between; height: 28px; }
+    .strip-head .moth-control-label { font-size: 11px; }
+    .strip-head .moth-readout { font-size: 21px; }
+    .primary-strip .moth-range { height: 35px; }
+    .primary-strip .moth-scale { margin-top: -2px; }
+    .compact-control { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 4px; }
+    .compact-control .moth-knob { width: 62px; }
+    .compact-copy { text-align: left; }
+    .compact-copy .moth-control-label { display: block; color: #c7cbd2; }
+    .compact-copy .moth-readout { display: block; margin-top: 4px; font-size: 16px; }
+    .side { position: absolute; left: 820px; top: 84px; width: 260px; height: 566px; padding: 22px 24px; border: 1px solid rgba(187,201,222,.09); border-radius: 8px; box-shadow: inset 0 0 20px rgba(0,0,0,.28); }
+    .side-title { margin: 0 0 18px; text-align: center; font: 700 14px Oxanium, sans-serif; color: #d2d7e0; letter-spacing: .15em; text-transform: uppercase; }
+    .source-control { display: grid; gap: 6px; }
+    .source-control .moth-select-wrap, .source-control .moth-select { width: 100%; }
+    .source-control .moth-control-label { color: #8b93a0; }
+    .sensitivity-control { display: grid; justify-items: center; gap: 5px; margin-top: 19px; }
+    .sensitivity-control .moth-knob { width: 94px; }
+    .sensitivity-control .moth-control-label { color: #d0d5de; }
+    .sensitivity-control .moth-readout { font-size: 20px; }
+    .status-panel { margin-top: 20px; border-top: 1px solid rgba(187,201,222,.12); padding-top: 15px; }
+    .status-row { display: grid; grid-template-columns: 54px 1fr 42px; align-items: center; gap: 8px; margin: 8px 0; color: #78818e; font: 500 9px Rajdhani,sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+    .meter { height: 5px; overflow: hidden; border-radius: 3px; background: #151821; box-shadow: inset 0 1px 3px #000; }
+    .meter i { display: block; width: var(--value,30%); height: 100%; border-radius: inherit; background: linear-gradient(90deg,#167f9a,var(--accent-hot)); box-shadow: 0 0 7px rgba(66,217,255,.42); transition: width .08s linear; }
+    .status-row output { color: #c8ced8; text-align: right; }
+    .state-card { display: flex; align-items: center; justify-content: space-between; margin-top: 15px; padding: 10px 11px; background: rgba(3,5,8,.52); border: 1px solid rgba(187,201,222,.12); border-radius: 5px; color: #7d8693; font: 500 9px Rajdhani,sans-serif; letter-spacing: .15em; text-transform: uppercase; }
+    .state-card strong { color: var(--accent-hot); font: 700 11px Oxanium,sans-serif; }
+    .advanced-button { position: absolute; left: 24px; right: 24px; bottom: 23px; width: calc(100% - 48px); }
+    .advanced-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 8px; margin-top: 18px; padding-top: 17px; border-top: 1px solid rgba(187,201,222,.12); }
+    .advanced-panel[hidden], .status-panel[hidden] { display: none; }
+    .advanced-control { display: grid; justify-items: center; gap: 2px; }
+    .advanced-control .moth-knob { width: 57px; }
+    .advanced-control .moth-control-label { color: #aeb5c0; font-size: 8px; }
+    .advanced-control .moth-readout { font-size: 12px; }
+    .tips { position: fixed; bottom: 9px; color: #69717e; font: 500 9px Rajdhani,sans-serif; letter-spacing: .1em; }
+    .plugin.is-bypassed #spectrum { opacity: .34; }
+  </style>
+</head>
+<body class="moth-preview">
+  <main class="plugin moth-plugin" aria-label="Adaptive Gate audio plugin mockup">
+    <header class="moth-header">
+      <div class="moth-maker">Moth Production</div>
+      <img class="moth-logo" src="../../MothProduction-Shared-VST/UI/Logo/moth_logo.png" alt="">
+      <div class="header-actions">
+        <div class="preset-bar" aria-label="Preset browser">
+          <button class="moth-button preset-nav" id="presetPrev" aria-label="Previous preset">‹</button>
+          <span class="moth-select-wrap"><select class="moth-select preset-select" id="presetSelect"><option>Default</option><option>Clean Guitar</option><option>Tight Bass</option><option>Drum Cleanup</option></select></span>
+          <button class="moth-button preset-nav" id="presetNext" aria-label="Next preset">›</button>
+          <button class="moth-button preset-save" id="presetSave">Save</button>
+        </div>
+        <span class="moth-version">v0.1.0</span>
+        <button class="moth-button moth-bypass" data-toggle data-bypass aria-pressed="false">Bypass</button>
+      </div>
+    </header>
+
+    <div class="moth-content">
+      <section class="visualizer" aria-label="Adaptive gate visualizer">
+        <div class="identity"><h1>Adaptive Gate</h1><p>Frequency-aware signal control</p></div>
+        <label class="demo-toggle">Demo signal <button class="moth-toggle" id="demoToggle" data-toggle aria-pressed="true" aria-label="Toggle demo signal"></button></label>
+        <div class="legend"><span style="--swatch:#96edff">Envelope</span><span style="--swatch:#9099a7">Noise</span><span style="--swatch:#ffb521">Threshold</span></div>
+        <canvas id="spectrum" width="1468" height="590"></canvas>
+        <div class="gate-readout"><strong id="gateValue">72%</strong><span id="gateLabel">Gate open</span></div>
+        <div class="band-labels"><span>20–70</span><span>70–120</span><span>120–250</span><span>250–1k</span><span>1–3.5k</span><span>3.5–6k</span><span>6–10k</span><span>10k+</span></div>
+        <div class="driver-readout">Driving band <strong id="driverBand">1–3.5 kHz</strong></div>
+      </section>
+
+      <section class="primary-strip" aria-label="Primary controls">
+        <div class="threshold-control">
+          <div class="strip-head"><label class="moth-control-label" for="threshold">Threshold</label><output class="moth-readout" id="thresholdValue">0.0 dB</output></div>
+          <input class="moth-range" id="threshold" type="range" min="-24" max="24" step="0.1" value="0" data-default="0" data-readout="thresholdValue" data-unit=" dB" data-signed="true">
+          <div class="moth-scale"><span>-24 dB · Open</span><span>Strict · +24 dB</span></div>
+        </div>
+        <div class="compact-control">
+          <div class="moth-knob"><img class="moth-knob-face" src="../../MothProduction-Shared-VST/UI/Components/Knobs/SplitFire-knob.png" alt=""><input id="range" type="range" min="0" max="100" step="1" value="0" data-default="0" data-readout="rangeValue" data-unit="%"></div>
+          <div class="compact-copy"><label class="moth-control-label" for="range">Range</label><output class="moth-readout" id="rangeValue">0%</output></div>
+        </div>
+        <div class="compact-control">
+          <div class="moth-knob"><img class="moth-knob-face" src="../../MothProduction-Shared-VST/UI/Components/Knobs/SplitFire-knob.png" alt=""><input id="mix" type="range" min="0" max="100" step="1" value="100" data-default="100" data-readout="mixValue" data-unit="%"></div>
+          <div class="compact-copy"><label class="moth-control-label" for="mix">Mix</label><output class="moth-readout" id="mixValue">100%</output></div>
+        </div>
+      </section>
+
+      <aside class="side" aria-label="Gate controls">
+        <h2 class="side-title">Detection</h2>
+        <label class="source-control"><span class="moth-control-label">Source</span><span class="moth-select-wrap"><select class="moth-select" id="source"><option>Speech</option><option selected>Guitar</option><option>Distorted Bass</option><option>Drum (Close Mic)</option><option>Drum (Overhead)</option></select></span></label>
+        <div class="sensitivity-control">
+          <div class="moth-knob"><img class="moth-knob-face" src="../../MothProduction-Shared-VST/UI/Components/Knobs/SplitFire-knob.png" alt=""><input id="sensitivity" type="range" min="0.1" max="4" step="0.01" value="1" data-default="1" data-readout="sensitivityValue" data-decimals="2"></div>
+          <label class="moth-control-label" for="sensitivity">Sensitivity</label><output class="moth-readout" id="sensitivityValue">1.00</output>
+        </div>
+        <div class="status-panel" id="statusPanel">
+          <div class="status-row"><span>Input</span><div class="meter"><i id="inputMeter"></i></div><output id="inputValue">-12 dB</output></div>
+          <div class="status-row"><span>Output</span><div class="meter"><i id="outputMeter"></i></div><output id="outputValue">-15 dB</output></div>
+          <div class="status-row"><span>Reduction</span><div class="meter"><i id="reductionMeter"></i></div><output id="reductionValue">-3 dB</output></div>
+          <div class="state-card"><span>Global state</span><strong id="stateValue">Open</strong></div>
+        </div>
+        <div class="advanced-panel" id="advancedPanel" hidden>
+          <div class="advanced-control"><div class="moth-knob"><img class="moth-knob-face" src="../../MothProduction-Shared-VST/UI/Components/Knobs/SplitFire-knob.png" alt=""><input id="attack" type="range" min="0.1" max="4" step="0.01" value="1" data-default="1" data-readout="attackValue" data-unit="x" data-decimals="2"></div><label class="moth-control-label" for="attack">Attack</label><output class="moth-readout" id="attackValue">1.00x</output></div>
+          <div class="advanced-control"><div class="moth-knob"><img class="moth-knob-face" src="../../MothProduction-Shared-VST/UI/Components/Knobs/SplitFire-knob.png" alt=""><input id="hold" type="range" min="0.1" max="4" step="0.01" value="1" data-default="1" data-readout="holdValue" data-unit="x" data-decimals="2"></div><label class="moth-control-label" for="hold">Hold</label><output class="moth-readout" id="holdValue">1.00x</output></div>
+          <div class="advanced-control"><div class="moth-knob"><img class="moth-knob-face" src="../../MothProduction-Shared-VST/UI/Components/Knobs/SplitFire-knob.png" alt=""><input id="release" type="range" min="0.1" max="4" step="0.01" value="1" data-default="1" data-readout="releaseValue" data-unit="x" data-decimals="2"></div><label class="moth-control-label" for="release">Release</label><output class="moth-readout" id="releaseValue">1.00x</output></div>
+          <div class="advanced-control"><div class="moth-knob"><img class="moth-knob-face" src="../../MothProduction-Shared-VST/UI/Components/Knobs/SplitFire-knob.png" alt=""><input id="hysteresis" type="range" min="0" max="12" step="0.1" value="2" data-default="2" data-readout="hysteresisValue" data-unit=" dB" data-decimals="1"></div><label class="moth-control-label" for="hysteresis">Hysteresis</label><output class="moth-readout" id="hysteresisValue">2.0 dB</output></div>
+        </div>
+        <button class="moth-button advanced-button" id="advancedToggle" aria-pressed="false">Advanced</button>
+      </aside>
+    </div>
+  </main>
+  <p class="tips">drag knobs vertically · double-click to reset · threshold moves every band decision line</p>
+
+  <script src="../../MothProduction-Shared-VST/UI/Mockup/moth-ui.js"></script>
+  <script>
+    (() => {
+      if (new URLSearchParams(location.search).has("shop")) document.body.classList.add("shop-render");
+      const $ = (id) => document.getElementById(id);
+      const canvas = $("spectrum");
+      const ctx = canvas.getContext("2d");
+      const root = document.documentElement;
+      const inputs = ["threshold","range","mix","sensitivity","attack","hold","release","hysteresis"].map($);
+      const bandNames = ["20–70 Hz","70–120 Hz","120–250 Hz","250 Hz–1 kHz","1–3.5 kHz","3.5–6 kHz","6–10 kHz","10 kHz+"];
+      const profiles = {
+        "Speech": [.18,.34,.68,.92,1,.78,.46,.24],
+        "Guitar": [.12,.43,.78,.96,1,.74,.38,.18],
+        "Distorted Bass": [.20,1,.94,.82,.72,.48,.22,.12],
+        "Drum (Close Mic)": [.30,.95,.88,.62,.92,.76,.42,.25],
+        "Drum (Overhead)": [.22,.55,.68,.66,.82,.96,1,.84]
+      };
+      const presets = {
+        "Default": { source:"Guitar", threshold:0, sensitivity:1, range:0, mix:100 },
+        "Clean Guitar": { source:"Guitar", threshold:-3, sensitivity:.72, range:8, mix:100 },
+        "Tight Bass": { source:"Distorted Bass", threshold:4.5, sensitivity:1.55, range:2, mix:100 },
+        "Drum Cleanup": { source:"Drum (Close Mic)", threshold:2, sensitivity:1.85, range:5, mix:100 }
+      };
+      let phase = 0;
+      let demoRunning = true;
+      let smoothedGate = .72;
+
+      const updateSharedInput = (input) => {
+        input.dispatchEvent(new Event("input", { bubbles:true }));
+      };
+
+      const applyPreset = (name) => {
+        const preset = presets[name];
+        if (!preset) return;
+        $("source").value = preset.source;
+        Object.entries(preset).forEach(([key,value]) => { if ($(key) && key !== "source") { $(key).value = value; updateSharedInput($(key)); } });
+      };
+
+      $("presetSelect").addEventListener("change", (e) => applyPreset(e.target.value));
+      $("presetPrev").addEventListener("click", () => { const s=$("presetSelect"); s.selectedIndex=(s.selectedIndex-1+s.options.length)%s.options.length; s.dispatchEvent(new Event("change")); });
+      $("presetNext").addEventListener("click", () => { const s=$("presetSelect"); s.selectedIndex=(s.selectedIndex+1)%s.options.length; s.dispatchEvent(new Event("change")); });
+      $("presetSave").addEventListener("click", () => { const name=prompt("Preset name", "My Gate"); if (!name) return; const option=new Option(name,name,true,true); $("presetSelect").add(option); presets[name]={source:$("source").value,threshold:+$("threshold").value,sensitivity:+$("sensitivity").value,range:+$("range").value,mix:+$("mix").value}; });
+      $("demoToggle").addEventListener("moth:toggle", (e) => { demoRunning=e.detail.pressed; });
+      $("advancedToggle").addEventListener("click", (e) => { const open=e.currentTarget.getAttribute("aria-pressed")!=="true"; e.currentTarget.setAttribute("aria-pressed",String(open)); e.currentTarget.textContent=open?"Overview":"Advanced"; $("advancedPanel").hidden=!open; $("statusPanel").hidden=open; });
+
+      const line = (x1,y1,x2,y2,color,width=1) => { ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.strokeStyle=color; ctx.lineWidth=width; ctx.stroke(); };
+      const levelY = (db, top, height) => top + (1 - Math.max(0,Math.min(1,(db+66)/66))) * height;
+
+      function draw() {
+        const w=canvas.width, h=canvas.height, top=24, bottom=68, graphH=h-top-bottom;
+        ctx.clearRect(0,0,w,h);
+        const profile=profiles[$("source").value];
+        const thresholdOffset=+$('threshold').value;
+        const sensitivity=+$('sensitivity').value;
+        const minGain=+$('range').value/100;
+        const wet=+$('mix').value/100;
+        if (demoRunning) phase += .026;
+        const pulse=Math.max(0,Math.sin(phase)*1.2-0.16) + Math.max(0,Math.sin(phase*2.31+1.2)-.83)*1.8;
+        let driver=0, best=-999, inputDb=-58;
+        const data=[];
+        for (let i=0;i<8;i++) {
+          const noise=-53+i*.65+Math.sin(phase*.33+i)*1.8;
+          const envelope=noise+3+profile[i]*(8+pulse*22)+Math.sin(phase*1.7+i*.82)*2.6;
+          const margin=5+(1-profile[i])*9+thresholdOffset;
+          const threshold=noise+margin;
+          const excess=envelope-threshold;
+          if (excess>best) { best=excess; driver=i; }
+          inputDb=Math.max(inputDb,envelope);
+          data.push({noise,envelope,threshold,excess});
+        }
+        const probability=1/(1+Math.exp(-best*.28*sensitivity));
+        const targetGain=minGain+(1-minGain)*probability;
+        const speed=targetGain>smoothedGate ? .18/(Math.max(.25,+$('attack').value)) : .04/(Math.max(.25,+$('release').value));
+        smoothedGate += (targetGain-smoothedGate)*speed;
+        const audibleGain=(1-wet)+wet*smoothedGate;
+        const reductionDb=20*Math.log10(Math.max(.001,audibleGain));
+        const outputDb=inputDb+reductionDb;
+        root.style.setProperty('--gate-open',smoothedGate.toFixed(3));
+        $('gateValue').textContent=Math.round(smoothedGate*100)+'%';
+        const state=smoothedGate>.7?'Open':smoothedGate>.24?'Adapting':'Closed';
+        $('gateLabel').textContent='Gate '+state.toLowerCase(); $('stateValue').textContent=state; $('driverBand').textContent=bandNames[driver];
+        $('inputValue').textContent=Math.round(inputDb)+' dB'; $('outputValue').textContent=Math.round(outputDb)+' dB'; $('reductionValue').textContent=reductionDb.toFixed(1)+' dB';
+        $('inputMeter').style.setProperty('--value',Math.max(2,(inputDb+66)/66*100)+'%');
+        $('outputMeter').style.setProperty('--value',Math.max(2,(outputDb+66)/66*100)+'%');
+        $('reductionMeter').style.setProperty('--value',Math.min(100,Math.abs(reductionDb)/36*100)+'%');
+
+        for (let db=-60;db<=0;db+=12) { const y=levelY(db,top,graphH); line(0,y,w,y,'rgba(147,159,177,.07)',2); }
+        const colW=w/8;
+        data.forEach((b,i) => {
+          const x=i*colW+colW*.18, bw=colW*.64;
+          const envY=levelY(b.envelope,top,graphH), noiseY=levelY(b.noise,top,graphH), thresholdY=levelY(b.threshold,top,graphH);
+          const grad=ctx.createLinearGradient(0,envY,0,top+graphH); grad.addColorStop(0,i===driver?'rgba(150,237,255,.82)':'rgba(66,217,255,.42)'); grad.addColorStop(1,'rgba(21,100,126,.05)');
+          ctx.fillStyle='rgba(255,255,255,.022)'; ctx.fillRect(x,top,bw,graphH);
+          ctx.fillStyle=grad; ctx.fillRect(x,envY,bw,top+graphH-envY);
+          line(x,noiseY,x+bw,noiseY,'rgba(180,190,204,.75)',3);
+          line(x,thresholdY,x+bw,thresholdY,'rgba(255,181,33,.9)',3);
+          ctx.strokeStyle=i===driver?'rgba(233,236,243,.88)':'rgba(187,201,222,.12)'; ctx.lineWidth=i===driver?3:2; ctx.strokeRect(x,top,bw,graphH);
+        });
+        requestAnimationFrame(draw);
+      }
+      inputs.forEach((input) => input.addEventListener('input', () => {}));
+      draw();
+    })();
+  </script>
+</body>
+</html>

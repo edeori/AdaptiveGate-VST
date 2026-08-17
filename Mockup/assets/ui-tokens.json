@@ -1,0 +1,32 @@
+{
+  "designSize": { "width": 1100, "height": 720, "headerHeight": 78 },
+  "colors": {
+    "background": "#050609",
+    "panel": "#0b0d12",
+    "panelRaised": "#11141a",
+    "text": "#e9ecf3",
+    "muted": "#79818e",
+    "line": "rgba(187, 201, 222, 0.18)",
+    "cyan": "#42d9ff",
+    "cyanHot": "#96edff",
+    "violet": "#944cff",
+    "violetHot": "#c190ff",
+    "threshold": "#ffb521"
+  },
+  "typography": {
+    "display": "Oxanium Bold",
+    "control": "Barlow Condensed Medium",
+    "numeric": "Rajdhani Medium"
+  },
+  "panels": {
+    "visualizer": { "x": 24, "y": 84, "width": 780, "height": 450 },
+    "primaryControls": { "x": 24, "y": 546, "width": 780, "height": 104 },
+    "sideControls": { "x": 820, "y": 84, "width": 260, "height": 566 }
+  },
+  "controls": {
+    "largeKnobDiameter": 92,
+    "compactKnobDiameter": 58,
+    "buttonHeight": 30,
+    "cornerRadius": 5
+  }
+}

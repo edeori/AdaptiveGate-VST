@@ -16,7 +16,7 @@ A presetek a `~/Library/Application Support/Moth Production/AdaptiveGate/Presets
 
 ## Kezelőszervek
 
-A plugin jelenleg JUCE beépített generikus paraméterlistája helyett egy kézzel épített, funkcionálisan azonos vezérlőlistát használ felületként (egyedi UI/skin még nincs), kiegészítve egy sávonkénti állapotkövető vizualizációval. Minden vezérlő fölé húzva az egeret egy rövid hint (tooltip) jelenik meg, ami elmagyarázza, mire való - az alábbi szövegek ugyanazok, forráskód szerinti pontos érték-tartományokkal:
+A plugin 1100×720-as, egyedi Moth Production felületet használ beágyazott bitmap háttérrel, képi knob/slider elemekkel és sávonkénti állapotkövető vizualizációval. Az alapnézetben a napi használathoz szükséges Source, Threshold, Sensitivity, Range és Mix vezérlők láthatók; az Attack, Hold, Release és Hysteresis az **Advanced** nézetben érhető el. Minden vezérlő fölé húzva az egeret egy rövid hint (tooltip) jelenik meg, ami elmagyarázza, mire való - az alábbi szövegek ugyanazok, forráskód szerinti pontos érték-tartományokkal:
 
 **Source** (Speech / Guitar / Distorted Bass / Drum (Close Mic) / Drum (Overhead))
 Kiválasztja a forrásanyaghoz illesztett frekvenciasáv-profilt: ez állítja be a crossover pontokat, az egyes sávok detektálási margin-ját, valamint az attack/hold/release és sigmoid-meredekség értékeket, amiket az adott sáv akkor "hoz be" a globális döntésbe, amikor ő vezényel. Alapjaiban meghatározza, mely frekvenciatartományok mennyire könnyen tudják megnyitni a kaput.

@@ -5,28 +5,44 @@
 #include "GateVisualizerComponent.h"
 #include "PresetPanelComponent.h"
 #include "ControlPanelComponent.h"
+#include "UI/AdaptiveGateLookAndFeel.h"
+#include "UI/PedalViewComponent.h"
 
-/**
-    Deliberately minimal editor: a custom per-band state visualizer, a preset bar,
-    and a hand-built control list (so each control can carry a tooltip explaining
-    what it does). Functional only, no custom look-and-feel -- skinning is
-    explicitly out of scope for now.
-*/
-class AdaptiveGateAudioProcessorEditor : public juce::AudioProcessorEditor
+#if defined (JUCE_LAYOUT_TUNER) && JUCE_LAYOUT_TUNER
+#include "Debug/JuceLayoutTuner.h"
+#endif
+
+class AdaptiveGateAudioProcessorEditor final : public juce::AudioProcessorEditor
 {
 public:
     explicit AdaptiveGateAudioProcessorEditor (AdaptiveGateAudioProcessor&);
-    ~AdaptiveGateAudioProcessorEditor() override = default;
+    ~AdaptiveGateAudioProcessorEditor() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
-    AdaptiveGateAudioProcessor& processorRef;
+    enum class ViewMode { Native, Pedal };
+
+    void switchToView (ViewMode);
+
+    adaptivegate::ui::LookAndFeel adaptiveLookAndFeel;
     juce::TooltipWindow tooltipWindow { this, 500 };
+    juce::Image backgroundImage, logoImage;
+
+    ControlPanelComponent controlPanel;
     GateVisualizerComponent visualizer;
     PresetPanelComponent presetPanel;
-    ControlPanelComponent controlPanel;
+    PedalViewComponent pedalView;
+
+    juce::Component makerLayoutTarget, logoLayoutTarget, versionLayoutTarget;
+
+    juce::TextButton pedalViewButton { "PEDAL VIEW" };
+    ViewMode currentView = ViewMode::Native;
+
+#if defined (JUCE_LAYOUT_TUNER) && JUCE_LAYOUT_TUNER
+    std::unique_ptr<juce_layout_tuner::Overlay> layoutTuner;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AdaptiveGateAudioProcessorEditor)
 };

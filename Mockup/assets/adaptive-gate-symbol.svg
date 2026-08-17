@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" fill="none">
+  <defs>
+    <linearGradient id="edge" x1="68" y1="150" x2="412" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#42D9FF"/>
+      <stop offset=".52" stop-color="#E9ECF3"/>
+      <stop offset="1" stop-color="#944CFF"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g opacity=".22" stroke="#BCC5D3">
+    <ellipse cx="240" cy="150" rx="184" ry="118"/>
+    <ellipse cx="240" cy="150" rx="145" ry="96"/>
+    <path d="M52 150h376M240 22v256" stroke-dasharray="2 8"/>
+  </g>
+  <g stroke="url(#edge)" stroke-width="2" filter="url(#glow)">
+    <path d="M216 45C151 72 114 108 93 150c21 42 58 78 123 105-25-54-25-156 0-210Z"/>
+    <path d="M264 45c65 27 102 63 123 105-21 42-58 78-123 105 25-54 25-156 0-210Z"/>
+    <path d="m240 89 13 61-13 61-13-61 13-61Z"/>
+  </g>
+  <g stroke="#A9B2C0" opacity=".32">
+    <path d="M216 72 121 150l95 78M264 72l95 78-95 78"/>
+    <path d="M142 100 216 150l-74 50M338 100l-74 50 74 50"/>
+  </g>
+</svg>

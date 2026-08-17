@@ -1,4 +1,6 @@
 #include "GateVisualizerComponent.h"
+#include "UI/AdaptiveGateFonts.h"
+#include "UI/AdaptiveGateLookAndFeel.h"
 
 namespace
 {
@@ -10,18 +12,28 @@ namespace
         const float t = juce::jlimit (0.0f, 1.0f, (db - meterMinDb) / (meterMaxDb - meterMinDb));
         return area.getBottom() - t * area.getHeight();
     }
+
+    void drawSpacedText (juce::Graphics& g, juce::String text, juce::Rectangle<int> area,
+                         juce::Justification justification)
+    {
+        juce::String spaced;
+        for (int i = 0; i < text.length(); ++i)
+        {
+            spaced << text[i];
+            if (i + 1 < text.length()) spaced << " ";
+        }
+        g.drawFittedText (spaced, area, justification, 1);
+    }
 }
 
 GateVisualizerComponent::GateVisualizerComponent (AdaptiveGateAudioProcessor& p)
     : processorRef (p)
 {
+    setInterceptsMouseClicks (false, false);
     startTimerHz (30);
 }
 
-GateVisualizerComponent::~GateVisualizerComponent()
-{
-    stopTimer();
-}
+GateVisualizerComponent::~GateVisualizerComponent() { stopTimer(); }
 
 juce::String GateVisualizerComponent::formatHz (float hz)
 {
@@ -33,105 +45,115 @@ juce::String GateVisualizerComponent::formatHz (float hz)
 void GateVisualizerComponent::timerCallback()
 {
     const auto snapshot = processorRef.getMeterSnapshot();
-
     if (smoothedBands.size() != snapshot.size())
         smoothedBands.assign (snapshot.size(), SmoothedBand {});
 
-    constexpr float smoothing = 0.35f; // toward-target factor per ~33ms tick
     for (size_t i = 0; i < snapshot.size(); ++i)
     {
-        auto& s = smoothedBands[i];
-        const auto& t = snapshot[i];
-        s.lowHz = t.lowHz;
-        s.highHz = t.highHz;
-        s.envelopeDb += (t.envelopeDb - s.envelopeDb) * smoothing;
-        s.noiseDb += (t.noiseDb - s.noiseDb) * smoothing;
-        s.thresholdDb += (t.thresholdDb - s.thresholdDb) * smoothing;
-        s.gain += (t.gain - s.gain) * smoothing;
-        s.isDriving = t.isDriving;
+        auto& current = smoothedBands[i];
+        const auto& target = snapshot[i];
+        current.lowHz = target.lowHz;
+        current.highHz = target.highHz;
+        current.envelopeDb += (target.envelopeDb - current.envelopeDb) * 0.35f;
+        current.noiseDb += (target.noiseDb - current.noiseDb) * 0.35f;
+        current.thresholdDb += (target.thresholdDb - current.thresholdDb) * 0.35f;
+        current.gain += (target.gain - current.gain) * 0.25f;
+        current.isDriving = target.isDriving;
     }
-
     repaint();
 }
 
 void GateVisualizerComponent::paint (juce::Graphics& g)
 {
-    auto bounds = getLocalBounds().toFloat();
+    using L = adaptivegate::ui::LookAndFeel;
+    const auto bounds = getLocalBounds().toFloat();
+    const float scale = bounds.getWidth() / 778.0f;
 
-    g.setColour (juce::Colours::black.withAlpha (0.25f));
-    g.fillRect (bounds);
+    g.setColour (L::text);
+    g.setFont (adaptivegate::ui::Fonts::title (31.0f * scale));
+    g.drawText ("ADAPTIVE GATE", juce::Rectangle<int> (0, juce::roundToInt (21.0f * scale), getWidth(), juce::roundToInt (38.0f * scale)),
+                juce::Justification::centred);
+    g.setColour (L::textDim);
+    g.setFont (adaptivegate::ui::Fonts::medium (9.0f * scale));
+    drawSpacedText (g, "FREQUENCY-AWARE SIGNAL CONTROL",
+                    juce::Rectangle<int> (0, juce::roundToInt (61.0f * scale), getWidth(), juce::roundToInt (16.0f * scale)),
+                    juce::Justification::centred);
 
-    // --- Current control-value readout ----------------------------------
-    auto readoutArea = bounds.removeFromTop (26.0f).toNearestInt();
-    auto& apvts = processorRef.apvts;
-
-    const bool bypassed = apvts.getRawParameterValue (AdaptiveGateAudioProcessor::bypassParamId)->load() > 0.5f;
-
-    const float globalGain = smoothedBands.empty() ? 0.0f : smoothedBands.front().gain;
-
-    juce::String readout;
-    readout << apvts.getParameter (AdaptiveGateAudioProcessor::sourceTypeParamId)->getCurrentValueAsText()
-            << "   Gate " << juce::String ((int) (globalGain * 100.0f)) << "%"
-            << "   Thr " << juce::String (apvts.getRawParameterValue (AdaptiveGateAudioProcessor::thresholdParamId)->load(), 1) << "dB"
-            << "   Sens " << juce::String (apvts.getRawParameterValue (AdaptiveGateAudioProcessor::sensitivityParamId)->load(), 2)
-            << "   Range " << juce::String (apvts.getRawParameterValue (AdaptiveGateAudioProcessor::rangeParamId)->load(), 2)
-            << "   A/H/R " << juce::String (apvts.getRawParameterValue (AdaptiveGateAudioProcessor::attackParamId)->load(), 2) << "x/"
-                            << juce::String (apvts.getRawParameterValue (AdaptiveGateAudioProcessor::holdParamId)->load(), 2) << "x/"
-                            << juce::String (apvts.getRawParameterValue (AdaptiveGateAudioProcessor::releaseParamId)->load(), 2) << "x"
-            << "   Hyst " << juce::String (apvts.getRawParameterValue (AdaptiveGateAudioProcessor::hysteresisParamId)->load(), 1) << "dB"
-            << "   Mix " << (int) (apvts.getRawParameterValue (AdaptiveGateAudioProcessor::mixParamId)->load() * 100.0f) << "%";
-    if (bypassed)
-        readout << "   [BYPASSED]";
-
-    g.setColour (bypassed ? juce::Colours::orange : juce::Colours::white.withAlpha (0.85f));
-    g.setFont (juce::Font (juce::FontOptions (13.0f)));
-    g.drawFittedText (readout, readoutArea, juce::Justification::centredLeft, 1);
+    g.setFont (adaptivegate::ui::Fonts::medium (7.5f * scale));
+    const int legendY = juce::roundToInt (25.0f * scale);
+    auto legend = [&] (const char* name, juce::Colour colour, int x)
+    {
+        g.setColour (colour); g.fillRect (juce::roundToInt ((float) x * scale), legendY + juce::roundToInt (5.0f * scale),
+                                           juce::roundToInt (9.0f * scale), juce::jmax (1, juce::roundToInt (2.0f * scale)));
+        g.setColour (L::textDim); g.drawText (name, juce::roundToInt (((float) x + 13.0f) * scale), legendY,
+                                              juce::roundToInt (55.0f * scale), juce::roundToInt (13.0f * scale),
+                                              juce::Justification::centredLeft);
+    };
+    legend ("ENV", L::cyanHot, 566);
+    legend ("NOISE", juce::Colour (0xffaab3c0), 628);
+    legend ("THRESHOLD", L::threshold, 699);
+    auto graph = juce::Rectangle<float> (22.0f * scale, 104.0f * scale, 734.0f * scale, 250.0f * scale);
+    for (int db = -60; db <= 0; db += 12)
+    {
+        g.setColour (juce::Colour (0xff939fb1).withAlpha (0.07f));
+        g.drawHorizontalLine (juce::roundToInt (dbToY ((float) db, graph)), graph.getX(), graph.getRight());
+    }
 
     if (smoothedBands.empty())
+    {
+        g.setColour (L::textDim.withAlpha (0.4f));
+        g.setFont (adaptivegate::ui::Fonts::numeric (12.0f * scale));
+        g.drawText ("WAITING FOR AUDIO", graph.toNearestInt(), juce::Justification::centred);
         return;
+    }
 
-    bounds.reduce (6.0f, 4.0f);
-    auto labelArea = bounds.removeFromBottom (16.0f);
-
-    const float bandWidth = bounds.getWidth() / (float) smoothedBands.size();
-
+    const float bandWidth = graph.getWidth() / (float) smoothedBands.size();
+    int driver = 0;
     for (size_t i = 0; i < smoothedBands.size(); ++i)
     {
-        const auto& b = smoothedBands[i];
-        const juce::Rectangle<float> col (bounds.getX() + (float) i * bandWidth, bounds.getY(), bandWidth, bounds.getHeight());
-        const auto inner = col.reduced (3.0f, 0.0f);
+        const auto& band = smoothedBands[i];
+        if (band.isDriving) driver = (int) i;
+        auto column = juce::Rectangle<float> (graph.getX() + (float) i * bandWidth + bandWidth * 0.18f,
+                                               graph.getY(), bandWidth * 0.64f, graph.getHeight());
+        g.setColour (juce::Colours::white.withAlpha (0.025f));
+        g.fillRect (column);
 
-        g.setColour (juce::Colours::white.withAlpha (0.05f));
-        g.fillRect (inner);
+        auto envelope = column.withTop (dbToY (band.envelopeDb, column));
+        juce::ColourGradient fill (band.isDriving ? L::cyanHot.withAlpha (0.76f) : L::cyan.withAlpha (0.42f),
+                                   envelope.getCentreX(), envelope.getY(), L::cyan.withAlpha (0.04f),
+                                   envelope.getCentreX(), envelope.getBottom(), false);
+        g.setGradientFill (fill); g.fillRect (envelope);
 
-        // Envelope bar, filled from the bottom up to the current level, coloured by the
-        // (single, global) gate gain. Fixed hue (cyan), ramping saturation/brightness
-        // from dim grey (closed) to vivid (open) - deliberately NOT a red/green hue
-        // sweep, which is unreadable for red-green colour blindness.
-        const float g01 = juce::jlimit (0.0f, 1.0f, b.gain);
-        const auto gainColour = juce::Colour::fromHSV (0.52f, 0.15f + 0.55f * g01, 0.30f + 0.60f * g01, 1.0f);
-        g.setColour (gainColour);
-        g.fillRect (inner.withTop (dbToY (b.envelopeDb, inner)));
+        g.setColour (juce::Colour (0xffb4becc).withAlpha (0.74f));
+        g.drawHorizontalLine (juce::roundToInt (dbToY (band.noiseDb, column)), column.getX(), column.getRight());
+        g.setColour (L::threshold.withAlpha (0.92f));
+        g.fillRect (column.getX(), dbToY (band.thresholdDb, column) - 0.75f, column.getWidth(), 1.5f * scale);
+        g.setColour (band.isDriving ? L::text.withAlpha (0.9f) : L::text.withAlpha (0.12f));
+        g.drawRect (column, band.isDriving ? 2.0f * scale : 1.0f * scale);
 
-        // Noise floor tick (grey)
-        const float noiseY = dbToY (b.noiseDb, inner);
-        g.setColour (juce::Colours::lightgrey.withAlpha (0.8f));
-        g.drawLine (inner.getX(), noiseY, inner.getRight(), noiseY, 1.0f);
-
-        // Gate-open threshold tick (amber) - the level this band would need to clear
-        // to be the one arguing "open" for the shared, global gate.
-        const float threshY = dbToY (b.thresholdDb, inner);
-        g.setColour (juce::Colours::orange.withAlpha (0.9f));
-        g.drawLine (inner.getX(), threshY, inner.getRight(), threshY, 1.5f);
-
-        // Driving band (currently supplying the strongest evidence to the global
-        // gate) gets a bright border instead of the usual faint one.
-        g.setColour (b.isDriving ? juce::Colours::white.withAlpha (0.9f) : juce::Colours::white.withAlpha (0.15f));
-        g.drawRect (inner, b.isDriving ? 2.0f : 1.0f);
-
-        const auto labCol = juce::Rectangle<float> (labelArea.getX() + (float) i * bandWidth, labelArea.getY(), bandWidth, labelArea.getHeight());
-        g.setColour (juce::Colours::white.withAlpha (0.6f));
-        g.setFont (juce::Font (juce::FontOptions (10.0f)));
-        g.drawFittedText (formatHz (b.lowHz) + "-" + formatHz (b.highHz), labCol.toNearestInt(), juce::Justification::centred, 1);
+        auto label = juce::Rectangle<int> (juce::roundToInt (graph.getX() + (float) i * bandWidth),
+                                            juce::roundToInt (367.0f * scale), juce::roundToInt (bandWidth),
+                                            juce::roundToInt (14.0f * scale));
+        g.setColour (L::textDim);
+        g.setFont (adaptivegate::ui::Fonts::numeric (8.0f * scale));
+        g.drawFittedText (formatHz (band.lowHz) + "-" + formatHz (band.highHz), label, juce::Justification::centred, 1);
     }
+
+    const float gain = juce::jlimit (0.0f, 1.0f, smoothedBands.front().gain);
+    const auto centre = juce::Point<float> (bounds.getCentreX(), 238.0f * scale);
+    auto readout = juce::Rectangle<float> (86.0f * scale, 58.0f * scale).withCentre (centre);
+    g.setColour (juce::Colour (0xff030508).withAlpha (0.92f)); g.fillRoundedRectangle (readout, 5.0f * scale);
+    g.setColour (L::text.withAlpha (0.2f)); g.drawRoundedRectangle (readout, 5.0f * scale, 1.0f);
+    g.setColour (L::text); g.setFont (adaptivegate::ui::Fonts::numeric (24.0f * scale));
+    g.drawText (juce::String (juce::roundToInt (gain * 100.0f)) + "%", readout.removeFromTop (37.0f * scale).toNearestInt(), juce::Justification::centredBottom);
+    g.setColour (L::cyanHot); g.setFont (adaptivegate::ui::Fonts::medium (7.5f * scale));
+    g.drawText (gain > 0.7f ? "GATE OPEN" : (gain > 0.2f ? "ADAPTING" : "GATE CLOSED"), readout.toNearestInt(), juce::Justification::centredTop);
+
+    g.setColour (L::textDim); g.setFont (adaptivegate::ui::Fonts::medium (9.0f * scale));
+    g.drawText ("DRIVING BAND", juce::roundToInt (23.0f * scale), juce::roundToInt (397.0f * scale),
+                juce::roundToInt (90.0f * scale), juce::roundToInt (16.0f * scale), juce::Justification::centredLeft);
+    g.setColour (L::cyanHot);
+    g.drawText (formatHz (smoothedBands[(size_t) driver].lowHz) + "-" + formatHz (smoothedBands[(size_t) driver].highHz),
+                juce::roundToInt (112.0f * scale), juce::roundToInt (397.0f * scale),
+                juce::roundToInt (120.0f * scale), juce::roundToInt (16.0f * scale), juce::Justification::centredLeft);
 }

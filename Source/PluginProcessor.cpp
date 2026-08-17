@@ -35,10 +35,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout AdaptiveGateAudioProcessor::
         ParameterID { attackParamId, 1 }, "Attack", NormalisableRange<float> (0.1f, 4.0f, 0.01f), 1.0f));
 
     params.push_back (std::make_unique<AudioParameterFloat> (
-        ParameterID { holdParamId, 1 }, "Hold", NormalisableRange<float> (0.1f, 4.0f, 0.01f), 1.0f));
+        ParameterID { holdParamId, 1 }, "Hold", NormalisableRange<float> (0.1f, 4.0f, 0.01f), 0.3f));
 
     params.push_back (std::make_unique<AudioParameterFloat> (
-        ParameterID { releaseParamId, 1 }, "Release", NormalisableRange<float> (0.1f, 4.0f, 0.01f), 1.0f));
+        ParameterID { releaseParamId, 1 }, "Release", NormalisableRange<float> (0.1f, 4.0f, 0.01f), 0.3f));
 
     params.push_back (std::make_unique<AudioParameterFloat> (
         ParameterID { hysteresisParamId, 1 }, "Hysteresis", NormalisableRange<float> (0.0f, 12.0f, 0.1f), 2.0f,

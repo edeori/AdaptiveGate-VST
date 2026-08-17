@@ -1,4 +1,5 @@
 #include "PresetPanelComponent.h"
+#include "UI/AdaptiveGateLookAndFeel.h"
 
 PresetPanelComponent::PresetPanelComponent (AdaptiveGateAudioProcessor& p)
     : processorRef (p)
@@ -8,12 +9,24 @@ PresetPanelComponent::PresetPanelComponent (AdaptiveGateAudioProcessor& p)
     presetBox.addListener (this);
     addAndMakeVisible (presetBox);
 
+    previousButton.setTooltip ("Load the previous preset.");
+    previousButton.addListener (this);
+    previousButton.getProperties().set (adaptivegate::ui::LookAndFeel::chromeProperty, true);
+    addAndMakeVisible (previousButton);
+
+    nextButton.setTooltip ("Load the next preset.");
+    nextButton.addListener (this);
+    nextButton.getProperties().set (adaptivegate::ui::LookAndFeel::chromeProperty, true);
+    addAndMakeVisible (nextButton);
+
     saveButton.setTooltip ("Save the current control settings as a new named preset.");
     saveButton.addListener (this);
+    saveButton.getProperties().set (adaptivegate::ui::LookAndFeel::chromeProperty, true);
     addAndMakeVisible (saveButton);
 
     deleteButton.setTooltip ("Delete the currently selected preset.");
     deleteButton.addListener (this);
+    deleteButton.getProperties().set (adaptivegate::ui::LookAndFeel::chromeProperty, true);
     addAndMakeVisible (deleteButton);
 
     refreshPresetList();
@@ -22,16 +35,22 @@ PresetPanelComponent::PresetPanelComponent (AdaptiveGateAudioProcessor& p)
 PresetPanelComponent::~PresetPanelComponent()
 {
     presetBox.removeListener (this);
+    previousButton.removeListener (this);
+    nextButton.removeListener (this);
     saveButton.removeListener (this);
     deleteButton.removeListener (this);
 }
 
 void PresetPanelComponent::resized()
 {
-    auto area = getLocalBounds().reduced (4);
-    deleteButton.setBounds (area.removeFromRight (70));
+    auto area = getLocalBounds();
+    previousButton.setBounds (area.removeFromLeft (26));
+    area.removeFromLeft (4);
+    deleteButton.setBounds (area.removeFromRight (46));
     area.removeFromRight (4);
-    saveButton.setBounds (area.removeFromRight (70));
+    saveButton.setBounds (area.removeFromRight (50));
+    area.removeFromRight (4);
+    nextButton.setBounds (area.removeFromRight (26));
     area.removeFromRight (4);
     presetBox.setBounds (area);
 }
@@ -61,6 +80,14 @@ void PresetPanelComponent::buttonClicked (juce::Button* b)
     {
         promptAndSavePreset();
     }
+    else if (b == &previousButton)
+    {
+        selectRelativePreset (-1);
+    }
+    else if (b == &nextButton)
+    {
+        selectRelativePreset (1);
+    }
     else if (b == &deleteButton)
     {
         const auto name = presetBox.getText();
@@ -71,6 +98,20 @@ void PresetPanelComponent::buttonClicked (juce::Button* b)
             presetBox.setText ({}, juce::dontSendNotification);
         }
     }
+}
+
+void PresetPanelComponent::selectRelativePreset (int delta)
+{
+    const int count = presetBox.getNumItems();
+    if (count == 0)
+        return;
+
+    int index = presetBox.getSelectedItemIndex();
+    if (index < 0)
+        index = delta > 0 ? 0 : count - 1;
+    else
+        index = (index + delta + count) % count;
+    presetBox.setSelectedItemIndex (index, juce::sendNotification);
 }
 
 void PresetPanelComponent::promptAndSavePreset()

@@ -24,12 +24,15 @@ private:
 
     void refreshPresetList();
     void promptAndSavePreset();
+    void selectRelativePreset (int delta);
 
     AdaptiveGateAudioProcessor& processorRef;
 
     juce::ComboBox presetBox;
-    juce::TextButton saveButton { "Save..." };
-    juce::TextButton deleteButton { "Delete" };
+    juce::TextButton previousButton { "<" };
+    juce::TextButton nextButton { ">" };
+    juce::TextButton saveButton { "SAVE" };
+    juce::TextButton deleteButton { "DEL" };
 
     std::unique_ptr<juce::AlertWindow> saveDialog;
 
