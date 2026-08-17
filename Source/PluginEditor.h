@@ -38,7 +38,7 @@ private:
     juce::Component makerLayoutTarget, logoLayoutTarget, versionLayoutTarget;
 
     juce::TextButton pedalViewButton { "PEDAL VIEW" };
-    ViewMode currentView = ViewMode::Native;
+    ViewMode currentView = ViewMode::Pedal;
 
 #if defined (JUCE_LAYOUT_TUNER) && JUCE_LAYOUT_TUNER
     std::unique_ptr<juce_layout_tuner::Overlay> layoutTuner;

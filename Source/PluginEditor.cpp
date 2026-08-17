@@ -58,7 +58,7 @@ AdaptiveGateAudioProcessorEditor::AdaptiveGateAudioProcessorEditor (AdaptiveGate
 #endif
 
     setResizable (true, true);
-    switchToView (ViewMode::Native);
+    switchToView (ViewMode::Pedal);
 }
 
 AdaptiveGateAudioProcessorEditor::~AdaptiveGateAudioProcessorEditor()
